@@ -53,7 +53,7 @@ export class UsersController {
   })
   async createUser(@Body() createUserDto: CreateUserDto, @Req() request) {
     try {
-      await this.usersService.createUser(createUserDto, request.user.id);
+      await this.usersService.createUser(createUserDto, request.user.id, request.user.role);
       return new CustomResponse(SUCCESS_RESPONSE.AdminCreateSuccess)
     } catch (error) {
       throw error

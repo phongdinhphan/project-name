@@ -10,7 +10,8 @@ import { CreateVoucherDto } from './dto/create-voucher.dto';
 import * as nodemailer from 'nodemailer';
 import { CustomResponse } from 'src/common/response_success';
 import { UsersUsedVoucher } from 'src/entities/users_used_voucher.entity';
-
+import { Cron } from '@nestjs/schedule';
+import * as cron from 'node-cron';
 class EmailNeedToSend {
   v_expired_date: Date
   gv_voucher_id: number
@@ -18,6 +19,7 @@ class EmailNeedToSend {
   u_name: string
   u_email: string
 }
+
 
 @Injectable()
 export class VouchersService {
@@ -27,9 +29,10 @@ export class VouchersService {
     @InjectRepository(Group) private readonly groupRepository: Repository<Group>,
     @InjectRepository(GroupsVouchers) private readonly groupsVouchersRepository: Repository<GroupsVouchers>,
     @InjectRepository(UsersUsedVoucher) private readonly usersUsedVoucherRepository: Repository<UsersUsedVoucher>,
-
-    private dataSource: DataSource
+    private dataSource: DataSource,
   ) { }
+
+
 
   async createVoucher(createVoucherDto: CreateVoucherDto, pathImage: string, idUserCreate) {
     const { assign_groups } = createVoucherDto
@@ -132,9 +135,14 @@ export class VouchersService {
     const userNeededToSendEmail = voucherInfoAndUsers.filter(data =>
       !getAllVoucherUsed.map(dataUsed => dataUsed.user_id + '@' + dataUsed.voucher_id).includes(data.u_user_id + '@' + data.gv_voucher_id)
     );
+
     return userNeededToSendEmail
   }
 
+
+  scheduleCronJob(cronExpression: string) {
+
+  }
 
 
   async sendMailToUser(emailNeededSendmail: EmailNeedToSend[]) {
@@ -144,7 +152,7 @@ export class VouchersService {
         user: process.env.AUTH_EmailSend,
         pass: process.env.AUTH_Pass,
       },
-    });
+    });  
 
 
     const emailPromises = emailNeededSendmail.map(async (voucher) => {
@@ -154,7 +162,7 @@ export class VouchersService {
         subject: 'Your Voucher is Expiring Soon',
         text: `Hello,\n\nYour voucher "${voucher.u_name}" is expiring on ${voucher.v_expired_date.toDateString()}. Don't miss out!\n\nBest regards,\nThe Voucher Team`,
       };
-      await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);  
     });
     try {
       await Promise.all(emailPromises);

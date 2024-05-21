@@ -36,8 +36,8 @@ export class AuthService {
     }
 
 
-    const accessToken = await this.generateAccessToken(email, dataUser.user_id, dataUser.role_id.role_id);
-    const refreshToken = await this.generateRefreshToken(email, dataUser.user_id, dataUser.role_id.role_id);
+    const accessToken = await this.generateAccessToken(email, dataUser.user_id, dataUser.role_id.role_id, dataUser.role_id.role_name);
+    const refreshToken = await this.generateRefreshToken(email, dataUser.user_id, dataUser.role_id.role_id, dataUser.role_id.role_name);
 
     dataUser.last_login = new Date()
     await this.userRepository.save(dataUser)
@@ -71,12 +71,13 @@ export class AuthService {
     return `This action removes a #${id} auth`;
   }
 
-  generateAccessToken(email: string, id: number, role: any): Promise<string> {
+  generateAccessToken(email: string, id: number, role: any, role_name: string): Promise<string> {
     const secret: string = process.env.accessToken
     const payload = {
       role,
       email,
-      id
+      id,
+      role_name
     };
 
     let expiresIn = '1d';
@@ -85,12 +86,13 @@ export class AuthService {
       secret,
     });
   }
-  generateRefreshToken(email: string, id: number, role: any): Promise<string> {
+  generateRefreshToken(email: string, id: number, role: any, role_name: string): Promise<string> {
     const secret: string = process.env.refreshToken
     const payload = {
       role,
       email,
-      id
+      id,
+      role_name
     };
 
     let expiresIn = '2h';

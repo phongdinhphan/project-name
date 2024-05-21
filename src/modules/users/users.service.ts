@@ -29,7 +29,7 @@ export class UsersService {
     private dataSource: DataSource
   ) { }
 
-  async createUser(createUserDto: CreateUserDto, idUserCreate: number) {
+  async createUser(createUserDto: CreateUserDto, idUserCreate: number, roleUserCreate: number) {
     const { email } = createUserDto
     const checkEmailInValid = await this.findOne(email)
 
@@ -43,14 +43,13 @@ export class UsersService {
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    if (roleUserCreate !== ROLE.ADMIN) {
+      if (createUserDto.role_id !== ROLE.MEMBER) {
+        throw new ErrorCustom(ERROR_RESPONSE.Unauthorized)
+      }
+    }
     try {
       const role = await this.roleService.findOne(createUserDto.role_id)
-      if (idUserCreate !== ROLE.ADMIN) {
-        if (createUserDto.role_id === ROLE.ADMIN || createUserDto.role_id === ROLE.GROUP_ADMIN) {
-          throw new ErrorCustom(ERROR_RESPONSE.Unauthorized)
-        }
-      }
-
       const dataCreateUsers = await this.userRepository.create({
         name: createUserDto.name,
         email: createUserDto.email,

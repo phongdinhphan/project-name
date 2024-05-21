@@ -100,7 +100,7 @@ export const ERROR_RESPONSE: Record<TErrorCode, IErrorResponse> = {
     AdminHasGroup: {
         statusCode: HttpStatus.BAD_REQUEST,
         code: 'B0007',
-        message: 'Admin is existed',
+        message: 'Admin has groups',
     },
     MemberHasGroup: {
         statusCode: HttpStatus.BAD_REQUEST,

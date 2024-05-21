@@ -21,8 +21,13 @@ export class GroupsService {
   async createGroups(createGroupDto: CreateGroupDto, idCreate: number) {
     const { name, group_admin_id, members } = createGroupDto;
     const allGroup = await this.findAllGroup()
-    const checkGroupAdmin = allGroup.find(group_id => group_id.group_admin_id === group_admin_id)
+    const checkAdminExits = await this.userRepository.findOneBy({ user_id: group_admin_id })
 
+    if (!checkAdminExits) {
+      throw new ErrorCustom(ERROR_RESPONSE.AdminNotExisted)
+    }
+
+    const checkGroupAdmin = allGroup.find(group_id => group_id.group_admin_id === group_admin_id)
     if (checkGroupAdmin) {
       throw new ErrorCustom(ERROR_RESPONSE.AdminHasGroup)
     }
@@ -36,9 +41,13 @@ export class GroupsService {
     const membersToCreate = await this.findUserAddToGroup(members)
 
 
+    if (membersToCreate.length == 0) {
+      throw new ErrorCustom(ERROR_RESPONSE.UserNotExits)
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
 
-    await this.checkUserExits(membersToCreate, members)
+    await this.checkMemberHasGroups(membersToCreate)
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -91,17 +100,13 @@ export class GroupsService {
     }
   }
 
-  checkUserExits(membersToCreate: any, members: any) {
-    const arrayUser = membersToCreate.map(user => user.id)
-    const checkExits = members.filter(id => !arrayUser.includes(id))
-    if (checkExits.length > 0) {
-      throw new ErrorCustom(ERROR_RESPONSE.UserNotExits, checkExits.join(', '))
-    }
+  checkMemberHasGroups(membersToCreate: any) {
 
     for (const member of membersToCreate) {
       if (member.group_id) {
         throw new ErrorCustom(ERROR_RESPONSE.MemberHasGroup, member.id)
       }
     }
+    new ErrorCustom(ERROR_RESPONSE.UserNotExits)
   }
 }

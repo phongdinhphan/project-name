@@ -119,12 +119,10 @@ export class VouchersController {
   }
 
   @Post('send-mail')
-  @Cron('0 1 * * * *')//  8AM GMT+7 (1H UTC0)
+  @Cron('10 * * * * *')//  8AM GMT+7 (1H UTC0)
   async sendMailExpiredVouchers() {
     const emailNeededSenmail = await this.vouchersService.checkVoucherUserSendMailExpired()
-    console.log(emailNeededSenmail);
-
-    //await this.vouchersService.sendMailToUser(emailNeededSenmail)
+    await this.vouchersService.sendMailToUser(emailNeededSenmail)
     return new CustomResponse(SUCCESS_RESPONSE.ResponseSuccess)
   }
 
